@@ -4,25 +4,44 @@ import fetch from "node-fetch";
 const app = express();
 app.use(express.json());
 
-const API_KEY = process.env.OPENAI_API_KEY;
+// 🔐 Secure key from Render
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
+// ✅ AI route
 app.post("/ai", async (req, res) => {
+  try {
     const prompt = req.body.prompt;
 
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+      {
         method: "POST",
         headers: {
-            "Authorization": "Bearer " + API_KEY,
-            "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "X-goog-api-key": GEMINI_KEY
         },
         body: JSON.stringify({
-            model: "gpt-5.3",
-            input: prompt
+          contents: [
+            {
+              parts: [{ text: prompt }]
+            }
+          ]
         })
-    });
+      }
+    );
 
     const data = await response.json();
+
     res.json(data);
+
+  } catch (err) {
+    res.status(500).json({ error: err.toString() });
+  }
+});
+
+// test route
+app.get("/", (req, res) => {
+  res.send("Gemini AI Server Running ✅");
 });
 
 app.listen(10000);
