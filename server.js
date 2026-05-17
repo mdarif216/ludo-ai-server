@@ -1,47 +1,102 @@
-import express from "express";
-import fetch from "node-fetch";
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
+
+app.use(cors());
 app.use(express.json());
 
-// 🔐 Secure key from Render
-const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const PORT = process.env.PORT || 3000;
 
-// ✅ AI route
-app.post("/ai", async (req, res) => {
-  try {
-    const prompt = req.body.prompt;
+const themes = [
+  "Fire",
+  "Ice",
+  "Galaxy",
+  "Neon",
+  "Royal"
+];
 
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-goog-api-key": GEMINI_KEY
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }]
-            }
-          ]
-        })
-      }
-    );
+const cosmetics = [
+  "Golden Dice",
+  "Neon Token",
+  "Royal Crown",
+  "Galaxy Trail",
+  "Fire Aura"
+];
 
-    const data = await response.json();
+function random(array) {
+  return array[
+    Math.floor(Math.random() * array.length)
+  ];
+}
 
-    res.json(data);
+function generateShop() {
 
-  } catch (err) {
-    res.status(500).json({ error: err.toString() });
+  const items = [];
+
+  for(let i = 0; i < 6; i++) {
+
+    items.push({
+      item: random(cosmetics),
+      rarity: random([
+        "Common",
+        "Rare",
+        "Epic",
+        "Legendary"
+      ]),
+      price:
+        Math.floor(Math.random() * 1000) + 100
+    });
+
   }
-});
 
-// test route
+  return items;
+}
+
+function generateSeason() {
+
+  const rewards = [];
+
+  for(let i = 1; i <= 50; i++) {
+
+    rewards.push({
+      level: i,
+      reward: random(cosmetics),
+      coins:
+        Math.floor(Math.random() * 500)
+    });
+
+  }
+
+  return {
+    seasonName:
+      random(themes) + " Season",
+    rewards
+  };
+}
+
 app.get("/", (req, res) => {
-  res.send("Gemini AI Server Running ✅");
+
+  res.send("Ludo Legends Backend Running");
+
 });
 
-app.listen(10000);
+app.get("/shop", (req, res) => {
+
+  res.json(generateShop());
+
+});
+
+app.get("/season", (req, res) => {
+
+  res.json(generateSeason());
+
+});
+
+app.listen(PORT, () => {
+
+  console.log(
+    "Server running on port " + PORT
+  );
+
+});
